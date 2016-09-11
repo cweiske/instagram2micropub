@@ -10,6 +10,9 @@ Screen scrapes the instagram web interface.
 
 Worked at 2016-09-11.
 Instagram may change their web interface - then this script will break.
+`Instagram is hostile`__, and you should not use it.
+
+__ https://www.jwz.org/blog/2016/03/instagram-hates-the-internet/
 
 Micropub endpoints that are known to work:
 
