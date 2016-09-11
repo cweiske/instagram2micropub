@@ -1,0 +1,14 @@
+<?php
+//the instagram user who's images you want to import
+$profile = 'whiterabbit';
+//path to shpub, including the server selection
+$shpub = '/home/cweiske/bin/shpub-0.0.4.phar -s whiterabbit';
+//where to cache data
+$dldir = __DIR__ . '/download';
+//stop at the first already-known post. set to false on first run
+$stopAtFirst = false;
+//curl command, including user-agent and most importantly the cookie
+$curl  = "curl -s"
+    . " -H 'User-Agent: myfunnybrowser'"
+    . " -H 'Cookie: sessionid=23dead42beef'";
+?>
