@@ -15,6 +15,9 @@ if (!is_dir($dldir)) {
     mkdir($dldir);
 }
 
+//allow utf-8 characters with escapeshellarg()
+setlocale(LC_CTYPE, "en_US.UTF-8");
+
 function fetchJson($url)
 {
     global $curl;
@@ -155,30 +158,53 @@ foreach ($it as $node) {
         } else {
             $loc = json_decode(file_get_contents($fileLoc));
         }
+        $loc = $loc->location;
     }
     if (!file_exists($filePub)) {
         //publish to micropub endpoint
         //var_dump($details);
         //die();
 
-        continue;
-
-        $title  = $node->caption;
-        $argVid = '';
-        if ($videoUrl !== null) {
-            $argVid = ' -f ' . escapeshellarg($videoUrl);
+        $title   = '';
+        if (isset($node->caption)) {
+            $title = $node->caption;
         }
-        $lastline = exec(
-            $shpub . ' note'
+        $postUrl = 'https://www.instagram.com/p/' . $node->code;
+        $argVid  = '';
+        $argLoc  = '';
+        if ($videoUrl !== null) {
+            $argVid = ' --file ' . escapeshellarg($videoUrl);
+        }
+        if (isset($loc)) {
+            $html = '<p>Location: '
+                . '<a href="'
+                . 'http://www.openstreetmap.org/'
+                . '?mlat=' . $loc->lat
+                . '&amp;mlon=' . $loc->lng
+                . '#map=10/' . $loc->lat . '/' . $loc->lng
+                . '">' . htmlspecialchars($loc->name) . '</a>'
+                . '</p>';
+            $argContent = ' --name=' . escapeshellarg($title)
+                . ' --html ' . escapeshellarg($html);
+            $argLoc = ' -x=' . escapeshellarg(
+                'location=geo:' . $loc->lat . ',' . $loc->lng
+            );
+        } else {
+            $argContent = ' ' . escapeshellarg($title);
+        }
+
+        $command = $shpub . ' note'
             . ' --published=' . date('c', $date)
-            . ' -f ' . escapeshellarg($imgUrl)
+            . ' --syndication=' . escapeshellarg($postUrl)
+            . ' --file ' . escapeshellarg($imgUrl)
             . $argVid
-            . ' ' . escapeshellarg($title),
-            $output,
-            $retval
-        );
+            . $argLoc
+            . $argContent;
+
+        $lastline = exec($command . ' 2>&1', $output, $retval);
         if ($retval != 0) {
-            logErr(' ERROR posting to known');
+            logErr(' ERROR posting to micropub endpoint');
+            logErr(implode("\n", $output));
             exit(10);
         }
         file_put_contents($filePub, $lastline);
